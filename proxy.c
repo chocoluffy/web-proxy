@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     printf("%s\n", buf);
     sscanf(buf, "%s %s %s", method, uri, version);       //line:netp:doit:parserequest
     printf("[2] method: %s, uri: %s, version: %s\n", method, uri, version);
-    read_requesthdrs(&rio); 
+    // read_requesthdrs(&rio); 
     
 
 
