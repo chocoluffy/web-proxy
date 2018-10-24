@@ -6,42 +6,41 @@
 #include <stdio.h>
 
 void get_host_ip_and_port(char *url, char *addr, char* port){
-    int flag = 0;
+    int flag = 0, addr_start = -1, i;
+    int port_start = -1, port_end = -1;
     if (strlen(url) > 4){
         if (!(url[0] == 'h' && url[1] == 't' && url[2] == 't' && url[3] == 'p')){
             flag ++;
+            addr_start = 0;
         }
     }
-    int start = -1;
-    int end = -1;
-    int i;
     for(i = 0; i < strlen(url); i++){
-        if (url[i] == ':')
-            flag ++;
+        if (url[i] == ':') {
+            flag++;
+            if (addr_start == -1 && flag == 1){
+                addr_start = i + 3;
+            }
+        }
         if (flag == 2){
-            if (start == -1) {
-                start = i + 1;
+            if (port_start == -1) {
+                port_start = i + 1;
                 continue;
             }
-            if (end == -1 && (url[i] < '0' || url[i] > '9')){
-                end = i;
+            if (port_end == -1 && (url[i] < '0' || url[i] > '9')){
+                port_end = i;
                 break;
             }
         }
     }
-    if (start == -1) {
-        port[0] = '8';
-        port[1] = '0';
-        port[2] = '\0';
+    if (port_start == -1) {
+        strcpy(port, "80");
         strcpy(addr, url);
         return;
     }
-    if (end == -1)
-        end = (int) (strlen(url));
-    for (i = 0; i < start - 1; i ++)
-        addr[i] = url[i];
-    addr[start] = '\0';
-    for (i = start; i < end; i ++)
-        port[i - start] = url[i];
-    port[end - start] = '\0';
+    if (port_end == -1)
+        port_end = (int) (strlen(url));
+    memcpy(addr, &url[addr_start], (size_t) (port_start - addr_start - 1));
+    memcpy(port,  &url[port_start], (size_t) (port_end - port_start));
+    addr[port_start - addr_start - 1] = '\0';
+    port[port_end - port_start] = '\0';
 }
