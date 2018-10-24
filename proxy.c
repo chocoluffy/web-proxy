@@ -5,6 +5,10 @@
 #define MAX_CACHE_SIZE 1049000
 #define MAX_OBJECT_SIZE 102400
 
+
+int parse_uri(char *uri, char *filename, char *cgiargs);
+
+
 /* You won't lose style points for including this long line in your code */
 static const char *user_agent_hdr =
     "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 "
@@ -36,7 +40,9 @@ int main(int argc, char **argv) {
   proxy_fd = Open_listenfd(argv[1]);
 
   while (1) {
-    client_len = sizeof(client_addr);
+    // 1. establish connection with client: bind argv[1] to proxy_fd.
+    client_len = sizeof(client_addr); 
+
     client_fd = Accept(proxy_fd, (SA *)&client_addr,
                        &client_len);  // line:netp:tiny:accept
     Getnameinfo((SA *)&client_addr, client_len, hostname, MAXLINE, port,
@@ -44,7 +50,7 @@ int main(int argc, char **argv) {
     printf("Accepted connection from (%s, %s)\n", hostname, port);
     
     /**
-     * 2.
+     * 2. parse client request header. get server addr & port.
      */
     char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
     rio_t rio;
@@ -58,9 +64,10 @@ int main(int argc, char **argv) {
     sscanf(buf, "%s %s %s", method, uri, version);       //line:netp:doit:parserequest
     printf("[2] method: %s, uri: %s, version: %s\n", method, uri, version);
     // read_requesthdrs(&rio); 
-    
-
-
+    int is_static;
+    char filename[MAXLINE], cgiargs[MAXLINE];
+    is_static = parse_uri(uri, filename, cgiargs);       //line:netp:doit:staticcheck
+    printf("[2] uri: %s, filename: %s, cgi: %s\n", uri, filename, cgiargs);
 
     // doit(client_fd);   // line:netp:tiny:doit
     Close(client_fd);  // line:netp:tiny:close
@@ -68,3 +75,36 @@ int main(int argc, char **argv) {
   
   return 0;
 }
+
+
+/*
+ * parse_uri - parse URI into filename and CGI args
+ *             return 0 if dynamic content, 1 if static
+ */
+/* $begin parse_uri */
+int parse_uri(char *uri, char *filename, char *cgiargs) 
+{
+    char *ptr;
+
+    if (!strstr(uri, "cgi-bin")) {  /* Static content */ //line:netp:parseuri:isstatic
+	strcpy(cgiargs, "");                             //line:netp:parseuri:clearcgi
+	strcpy(filename, ".");                           //line:netp:parseuri:beginconvert1
+	strcat(filename, uri);                           //line:netp:parseuri:endconvert1
+	if (uri[strlen(uri)-1] == '/')                   //line:netp:parseuri:slashcheck
+	    strcat(filename, "home.html");               //line:netp:parseuri:appenddefault
+	return 1;
+    }
+    else {  /* Dynamic content */                        //line:netp:parseuri:isdynamic
+	ptr = index(uri, '?');                           //line:netp:parseuri:beginextract
+	if (ptr) {
+	    strcpy(cgiargs, ptr+1);
+	    *ptr = '\0';
+	}
+	else 
+	    strcpy(cgiargs, "");                         //line:netp:parseuri:endextract
+	strcpy(filename, ".");                           //line:netp:parseuri:beginconvert2
+	strcat(filename, uri);                           //line:netp:parseuri:endconvert2
+	return 0;
+    }
+}
+/* $end parse_uri */
