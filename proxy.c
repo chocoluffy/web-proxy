@@ -96,7 +96,10 @@ int main(int argc, char **argv) {
      * 5. forward client's request to server.
      * - compare to serve_static().
      */
-    int send_res = Write(server_fd, buf, sizeof(buf));
+    char* new_buff = "GET /home.html HTTP/1.1\r\n\r\n";
+    printf("[5] new buf content: %s\n", new_buff);
+
+    int send_res = Write(server_fd, new_buff, sizeof(buf));
     if (send_res < 0) {
       perror("[5] Write.");
     }
