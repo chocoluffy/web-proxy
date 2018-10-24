@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "csapp.h"
+#include "helpers.c"
 
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
@@ -81,8 +82,9 @@ int main(int argc, char **argv) {
     socklen_t socklen;	 /* length of the socket structure sockaddr         */
 
 	  memset(&server, 0, sizeof(struct sockaddr_in));
-    char* hostname, port;
+    char hostname[MAXLINE], port[MAXLINE];
     get_host_ip_and_port(uri, hostname, port);
+    printf("[3] parse url: hostname: %s, port: %s.\n", hostname, port);
 
     int server_fd = Open_clientfd(hostname, port);
 

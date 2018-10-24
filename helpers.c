@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
-void parse_url(char *url, char *addr, char* port){
+void get_host_ip_and_port(char *url, char *addr, char* port){
     int flag = 0;
     if (strlen(url) > 4){
         if (!(url[0] == 'h' && url[1] == 't' && url[2] == 't' && url[3] == 'p')){
