@@ -7,6 +7,7 @@
 
 
 int parse_uri(char *uri, char *filename, char *cgiargs);
+void get_host_ip_and_port(char* uri, char* name, char* port);
 
 
 /* You won't lose style points for including this long line in your code */
@@ -16,7 +17,9 @@ static const char *user_agent_hdr =
 
 int main(int argc, char **argv) {
   printf("%s", user_agent_hdr);
-  int proxy_fd, client_fd, server_fd;
+  int proxy_fd;
+  int client_fd; // use for accept\send to client.
+  int server_fd; // use for connect\send to the server.
   char hostname[MAXLINE], port[MAXLINE];
   socklen_t client_len, server_len;
   struct sockaddr_storage client_addr, server_addr;
@@ -60,7 +63,7 @@ int main(int argc, char **argv) {
     if (!Rio_readlineb(&rio, buf, MAXLINE)) { //line:netp:doit:readrequest
         return -1; /* TODO: cannot break the proxy. need error handling. */
     }
-    printf("%s\n", buf);
+    // printf("%s\n", buf);
     sscanf(buf, "%s %s %s", method, uri, version);       //line:netp:doit:parserequest
     printf("[2] method: %s, uri: %s, version: %s\n", method, uri, version);
     // read_requesthdrs(&rio); 
@@ -68,6 +71,34 @@ int main(int argc, char **argv) {
     char filename[MAXLINE], cgiargs[MAXLINE];
     is_static = parse_uri(uri, filename, cgiargs);       //line:netp:doit:staticcheck
     printf("[2] uri: %s, filename: %s, cgi: %s\n", uri, filename, cgiargs);
+
+    /**
+     * 3. eatablish connection with server.
+     * - assume we have ip: localhost; port: 3010.
+     */
+    struct sockaddr_in server;
+    struct hostent *he;	 /* structure for resolving names into IP addresses */
+    socklen_t socklen;	 /* length of the socket structure sockaddr         */
+
+	  memset(&server, 0, sizeof(struct sockaddr_in));
+    char* hostname, port;
+    get_host_ip_and_port(uri, hostname, port);
+
+    int server_fd = Open_clientfd(hostname, port);
+
+    /**
+     * 4. ... (TODO: check and update header.)
+     */
+
+    /**
+     * 5. forward client's request to server.
+     * - compare to serve_static().
+     */
+    int send_res = Write(server_fd, buf, sizeof(buf));
+    if (send_res < 0) {
+      perror("[5] Write.");
+    }
+    printf("[5] send response: %d.\n", send_res);
 
     // doit(client_fd);   // line:netp:tiny:doit
     Close(client_fd);  // line:netp:tiny:close
