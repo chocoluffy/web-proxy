@@ -107,17 +107,29 @@ int main(int argc, char **argv) {
 
 
     /**
-     * 6. wait for response from server.
+     * 6. Receive response from server.
      */
     rio_t s_rio;
     char s_buf[MAXLINE];
 
-    /* Read request line and headers */
+    /* Read server response headers. */
     Rio_readinitb(&s_rio, server_fd);
-    if (!Rio_readlineb(&s_rio, s_buf, MAXLINE)) { //line:netp:doit:readrequest
-        return -1; /* TODO: cannot break the proxy. need error handling. */
+    printf("[6] server response header:\n");
+    printf("%s", s_buf);
+    while(strcmp(s_buf, "\r\n")) {          //line:netp:readhdrs:checkterm
+	    Rio_readlineb(&s_rio, s_buf, MAXLINE);
+      /* TODO: parse every useful information!
+       * such as content-length, later read need this information.
+       */
+	    printf("%s", s_buf);
     }
-    printf("[6] s_buf content: %s\n", s_buf);
+
+    /* Read server response body. */
+    int filesize = 120; // TODO: fix this hard-coded value.
+    char response_body[filesize];
+    printf("[6] server response body:\n");
+    Rio_readnb(&s_rio, response_body, filesize);
+    printf("%s", response_body);
 
     /**
      * 7. forward response to client
@@ -130,7 +142,7 @@ int main(int argc, char **argv) {
     }
     printf("[7] send response: %d.\n", send_res2);
 
-    doit(client_fd);   // line:netp:tiny:doit
+
 
 
 

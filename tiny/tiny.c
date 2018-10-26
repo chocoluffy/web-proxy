@@ -56,7 +56,7 @@ void doit(int fd)
     Rio_readinitb(&rio, fd);
     if (!Rio_readlineb(&rio, buf, MAXLINE))  //line:netp:doit:readrequest
         return;
-    printf("[doit]: %s", buf);
+    printf("%s", buf);
     sscanf(buf, "%s %s %s", method, uri, version);       //line:netp:doit:parserequest
     if (strcasecmp(method, "GET")) {                     //line:netp:doit:beginrequesterr
         clienterror(fd, method, "501", "Not Implemented",
