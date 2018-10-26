@@ -99,11 +99,7 @@ int main(int argc, char **argv) {
     char* new_buff = "GET /home.html HTTP/1.1\r\n\r\n";
     printf("[5] new buf content: %s\n", new_buff);
 
-    int send_res = Write(server_fd, new_buff, MAXLINE);
-    if (send_res < 0) {
-      perror("[5] Write.");
-    }
-    printf("[5] send response: %d.\n", send_res);
+    Rio_writen(server_fd, new_buff, MAXLINE);
 
 
     /**
@@ -122,6 +118,11 @@ int main(int argc, char **argv) {
        * such as content-length, later read need this information.
        */
 	    printf("%s", s_buf);
+
+      /**
+       * parse and send to the client side at the same time.
+       */
+      Rio_writen(client_fd, s_buf, MAXLINE);
     }
 
     /* Read server response body. */
@@ -132,21 +133,22 @@ int main(int argc, char **argv) {
     printf("%s", response_body);
 
     /**
-     * 7. forward response to client
+     * 7. forward response to client.
+     * - reponse header has been forwarded during parsing.
+     * - this section only forwards response body.
      */
-    int send_res2 = Write(client_fd, s_buf, sizeof(s_buf));
-    Write(client_fd, "\r\n", sizeof("\r\n"));
+    Rio_writen(client_fd, response_body, filesize); 
+    // Rio_writen(client_fd, "\r\n", sizeof("\r\n")); 
+    // int send_res2 = Write(client_fd, s_buf, sizeof(s_buf));
+    // Write(client_fd, "\r\n", sizeof("\r\n"));
+    // if (send_res2 < 0) {
+    //   perror("[7] Write.");
+    // }
+    // printf("[7] send response: %d.\n", send_res2);
 
-    if (send_res2 < 0) {
-      perror("[7] Write.");
-    }
-    printf("[7] send response: %d.\n", send_res2);
-
-
-
-
-
+    
     Close(client_fd);  // line:netp:tiny:close
+    Close(server_fd);
   }
   
   return 0;
