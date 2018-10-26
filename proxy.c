@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
     char* new_buff = "GET /home.html HTTP/1.1\r\n\r\n";
     printf("[5] new buf content: %s\n", new_buff);
 
-    int send_res = Write(server_fd, new_buff, sizeof(new_buff));
+    int send_res = Write(server_fd, new_buff, MAXLINE);
     if (send_res < 0) {
       perror("[5] Write.");
     }
@@ -122,15 +122,18 @@ int main(int argc, char **argv) {
     /**
      * 7. forward response to client
      */
-    // int send_res2 = Write(client_fd, s_buf, sizeof(s_buf));
-    // Write(client_fd, "\r\n", sizeof("\r\n"));
+    int send_res2 = Write(client_fd, s_buf, sizeof(s_buf));
+    Write(client_fd, "\r\n", sizeof("\r\n"));
 
-    // if (send_res2 < 0) {
-    //   perror("[7] Write.");
-    // }
-    // printf("[7] send response: %d.\n", send_res2);
+    if (send_res2 < 0) {
+      perror("[7] Write.");
+    }
+    printf("[7] send response: %d.\n", send_res2);
 
-    // doit(client_fd);   // line:netp:tiny:doit
+    doit(client_fd);   // line:netp:tiny:doit
+
+
+
     Close(client_fd);  // line:netp:tiny:close
   }
   
