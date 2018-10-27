@@ -61,17 +61,19 @@ int main(int argc, char **argv) {
 
     /* Read request line and headers */
     Rio_readinitb(&rio, client_fd);
-    if (!Rio_readlineb(&rio, buf, MAXLINE)) { //line:netp:doit:readrequest
-        return -1; /* TODO: cannot break the proxy. need error handling. */
-    }
-    // printf("%s\n", buf);
+    printf("===client request header===\n");
+    Rio_readlineb(&rio, buf, MAXLINE);
+    printf("%s", buf);
+
+    // buf contains: [method, uri, version].
     sscanf(buf, "%s %s %s", method, uri, version);       //line:netp:doit:parserequest
     printf("[2] method: %s, uri: %s, version: %s\n", method, uri, version);
-    // read_requesthdrs(&rio); 
-    int is_static;
-    char filename[MAXLINE], cgiargs[MAXLINE];
-    is_static = parse_uri(uri, filename, cgiargs);       //line:netp:doit:staticcheck
-    printf("[2] uri: %s, filename: %s, cgi: %s\n", uri, filename, cgiargs);
+
+    while(strcmp(buf, "\r\n")) {          //line:netp:readhdrs:checkterm
+	    Rio_readlineb(&rio, buf, MAXLINE);
+	    printf("%s", buf);
+    }
+    printf("===\n");
 
     /**
      * 3. eatablish connection with server.
@@ -92,11 +94,12 @@ int main(int argc, char **argv) {
      * 4. ... (TODO: check and update header.)
      */
 
+
     /**
      * 5. forward client's request to server.
      * - compare to serve_static().
      */
-    char* new_buff = "GET /home.html HTTP/1.1\r\n\r\n";
+    char* new_buff = "GET /home2.html HTTP/1.1\r\n\r\n";
     printf("[5] new buf content: %s\n", new_buff);
 
     Rio_writen(server_fd, new_buff, MAXLINE);
