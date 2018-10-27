@@ -238,3 +238,15 @@ void clienterror(int fd, char *cause, char *errnum,
     Rio_writen(fd, body, strlen(body));
 }
 /* $end clienterror */
+
+
+//int main(){
+//    lfu_entry lfu[3];
+//    for (int i = 0; i < 3; i ++){
+//        lfu[i].freq = 0;
+//    }
+//    record rec_table[1000];
+//    int rec_tb_len = 0;
+//    update_LFU("a.com", "aaaaa", rec_table, lfu, &rec_tb_len);
+//    return 0;
+//}

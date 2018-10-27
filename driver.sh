@@ -310,9 +310,17 @@ download_proxy $PROXY_DIR "nop-file.txt" "http://localhost:${nop_port}/nop-file.
 echo "Fetching ./tiny/${FETCH_FILE} into ${NOPROXY_DIR} directly from Tiny"
 download_noproxy $NOPROXY_DIR ${FETCH_FILE} "http://localhost:${tiny_port}/${FETCH_FILE}"
 
+echo $NOPROXY_DIR
+cat "${NOPROXY_DIR}/${FETCH_FILE}"
+
+
 # Fetch using the proxy
 echo "Fetching ./tiny/${FETCH_FILE} into ${PROXY_DIR} using the proxy"
 download_proxy $PROXY_DIR ${FETCH_FILE} "http://localhost:${tiny_port}/${FETCH_FILE}" "http://localhost:${proxy_port}"
+
+echo $PROXY_DIR
+cat "${PROXY_DIR}/${FETCH_FILE}"
+
 
 # See if the proxy fetch succeeded
 echo "Checking whether the proxy fetch succeeded"
