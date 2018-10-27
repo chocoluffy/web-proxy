@@ -13,6 +13,10 @@ typedef struct Record {
 } record;
 
 void update_LFU(char *url, char *body, record *rec_table, lfu_entry *lfu,
+                 int *rec_tb_len);
+int get_LFU(char *url, lfu_entry *lfu, char* res);
+
+void update_LFU(char *url, char *body, record *rec_table, lfu_entry *lfu,
                  int *rec_tb_len) {
   /**
    * Update LFU:
@@ -76,19 +80,19 @@ int get_LFU(char *url, lfu_entry *lfu, char* res) {
     return -1;
 }
 
-int main() {
+// int main() {
   
-  lfu_entry lfu[3];
-  for(int i= 0; i< 3; i++) {
-      lfu[i].url = NULL;
-      lfu[i].freq = 0;
-      lfu[i].body = NULL;
-  }
-  record rec_table[1000];
-  int rec_tb_len = 0;
-  update_LFU("a.com", "aaaaa", rec_table, lfu, &rec_tb_len);
-  update_LFU("b.com", "bbbbb", rec_table, lfu, &rec_tb_len);
-  update_LFU("a.com", "aaaaa", rec_table, lfu, &rec_tb_len);
-  update_LFU("c.com", "ccc", rec_table, lfu, &rec_tb_len);
-  return 0;
-}
+//   lfu_entry lfu[3];
+//   for(int i= 0; i< 3; i++) {
+//       lfu[i].url = NULL;
+//       lfu[i].freq = 0;
+//       lfu[i].body = NULL;
+//   }
+//   record rec_table[1000];
+//   int rec_tb_len = 0;
+//   update_LFU("a.com", "aaaaa", rec_table, lfu, &rec_tb_len);
+//   update_LFU("b.com", "bbbbb", rec_table, lfu, &rec_tb_len);
+//   update_LFU("a.com", "aaaaa", rec_table, lfu, &rec_tb_len);
+//   update_LFU("c.com", "ccc", rec_table, lfu, &rec_tb_len);
+//   return 0;
+// }
