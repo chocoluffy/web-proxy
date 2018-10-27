@@ -54,7 +54,12 @@ int main(int argc, char **argv) {
     printf("Accepted connection from (%s, %s)\n", hostname, port);
     
     // Each client connection takes one thread.
-    if (Fork() == 0) {
+    int pid = Fork();
+    if (pid < 0) {
+        Close(client_fd);
+        break;
+    }
+    if (pid == 0) {
         /**
          * 2. parse client request header. get server addr & port.
          */
@@ -125,10 +130,8 @@ int main(int argc, char **argv) {
 
         Close(client_fd);  // line:netp:tiny:close
         Close(server_fd);
-    }
-    else {
-        Wait(NULL);
-    }   
+        break;
+    }  
   }
   
   return 0;
