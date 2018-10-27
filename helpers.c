@@ -44,3 +44,16 @@ void get_host_ip_and_port(char *url, char *addr, char* port){
     addr[port_start - addr_start - 1] = '\0';
     port[port_end - port_start] = '\0';
 }
+
+void get_filename(char *url, char *filename){
+    char *s = url;
+    s = strstr(url, "http");
+    if (s != NULL) {
+        if (s[4] == 's')
+            s += 1;
+        s += 7;
+    } else
+        s = url;
+    s = strchr(s, '/');
+    strcpy(filename, s);
+}
