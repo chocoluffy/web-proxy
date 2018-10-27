@@ -1,13 +1,17 @@
-typedef struct LFU_entry{
+typedef struct entry{
     char* url;
     char* body;
     int freq;
-} lfu_entry;
+    int time;
+} entry;
+
 
 typedef struct Record{
     char* url;
     int freq;
+    int time;
 } record;
+
 
 
 void get_host_ip_and_port(char *url, char *addr, char* port){
