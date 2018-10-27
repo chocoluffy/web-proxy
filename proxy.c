@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     struct hostent *he;	 /* structure for resolving names into IP addresses */
     socklen_t socklen;	 /* length of the socket structure sockaddr         */
 
-	  memset(&server, 0, sizeof(struct sockaddr_in));
+	memset(&server, 0, sizeof(struct sockaddr_in));
     char hostname[MAXLINE], port[MAXLINE];
     get_host_ip_and_port(uri, hostname, port);
     printf("[3] parse url: hostname: %s, port: %s.\n", hostname, port);
@@ -102,11 +102,16 @@ int main(int argc, char **argv) {
     Rio_writen(server_fd, new_buff, MAXLINE);
 
 
+
+
+
+
     /**
      * 6. Receive response from server.
      */
     rio_t s_rio;
     char s_buf[MAXLINE];
+    s_buf[0] = '\0';
 
     /* Read server response headers. */
     Rio_readinitb(&s_rio, server_fd);
@@ -124,29 +129,32 @@ int main(int argc, char **argv) {
        */
       Rio_writen(client_fd, s_buf, MAXLINE);
     }
+    printf("===header finished===\n");
 
     /* Read server response body. */
     int filesize = 120; // TODO: fix this hard-coded value.
     char response_body[filesize];
+    response_body[0] = '\0';
     printf("[6] server response body:\n");
     Rio_readnb(&s_rio, response_body, filesize);
+    response_body[sizeof(response_body)] = '\0';
     printf("%s", response_body);
+    printf("===body finished===\n");
+    
+    /* Read out the extra empty line. */
+    // char extra[MAXLINE];
+    // Rio_readlineb(&s_rio, extra, MAXLINE);
 
     /**
      * 7. forward response to client.
      * - reponse header has been forwarded during parsing.
      * - this section only forwards response body.
      */
-    Rio_writen(client_fd, response_body, filesize); 
-    // Rio_writen(client_fd, "\r\n", sizeof("\r\n")); 
-    // int send_res2 = Write(client_fd, s_buf, sizeof(s_buf));
-    // Write(client_fd, "\r\n", sizeof("\r\n"));
-    // if (send_res2 < 0) {
-    //   perror("[7] Write.");
-    // }
-    // printf("[7] send response: %d.\n", send_res2);
-
     
+    Rio_writen(client_fd, response_body, filesize); 
+    printf("[7] support to send %d, actually send %d\n", filesize, -1);
+    // Rio_writen(client_fd, "\r\n", sizeof("\r\n")); 
+
     Close(client_fd);  // line:netp:tiny:close
     Close(server_fd);
   }

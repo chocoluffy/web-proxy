@@ -7,3 +7,5 @@
 - [TRY]: if we can parse the header info and send that information to the client at the same time.
 
 - use Rio instead of normal IO for read and write.
+
+- whenver init with `char var[xx]`, note that such var refers to random memory, should mark the ending position as `\0`, such that we know where to stop, and not printing out random trash.
