@@ -114,9 +114,6 @@ char* update_LFU(char *url, char *body, record *rec_table, lfu_entry *lfu, int *
 
 //int main(){
 //    lfu_entry lfu[3];
-//    for (int i = 0; i < 3; i ++){
-//        lfu[i].freq = 0;
-//    }
 //    record rec_table[1000];
 //    int rec_tb_len = 0;
 //    update_LFU("a.com", "aaaaa", rec_table, lfu, &rec_tb_len);
