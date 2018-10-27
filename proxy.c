@@ -53,128 +53,82 @@ int main(int argc, char **argv) {
                 MAXLINE, 0);
     printf("Accepted connection from (%s, %s)\n", hostname, port);
     
-    /**
-     * 2. parse client request header. get server addr & port.
-     */
-    char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
-    rio_t rio;
+    // Each client connection takes one thread.
+    if (Fork() == 0) {
+        /**
+         * 2. parse client request header. get server addr & port.
+         */
+        char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
+        rio_t rio;
 
-    /* Read request line and headers */
-    Rio_readinitb(&rio, client_fd);
-    printf("===client request header===\n");
-    Rio_readlineb(&rio, buf, MAXLINE);
-    printf("%s", buf);
+        /* Read request line and headers */
+        Rio_readinitb(&rio, client_fd);
+        printf("===client request header===\n");
+        Rio_readlineb(&rio, buf, MAXLINE);
+        printf("%s", buf);
 
-    // buf contains: [method, uri, version].
-    sscanf(buf, "%s %s %s", method, uri, version);       //line:netp:doit:parserequest
-    printf("[2] method: %s, uri: %s, version: %s\n", method, uri, version);
+        // buf contains: [method, uri, version].
+        sscanf(buf, "%s %s %s", method, uri, version);       //line:netp:doit:parserequest
+        printf("[2] method: %s, uri: %s, version: %s\n", method, uri, version);
 
-    while(strcmp(buf, "\r\n")) {          //line:netp:readhdrs:checkterm
-	    Rio_readlineb(&rio, buf, MAXLINE);
-	    printf("%s", buf);
-    }
-    printf("===\n");
-
-    /**
-     * 3. eatablish connection with server.
-     * - assume we have ip: localhost; port: 3010.
-     */
-    struct sockaddr_in server;
-    struct hostent *he;	 /* structure for resolving names into IP addresses */
-    socklen_t socklen;	 /* length of the socket structure sockaddr         */
-
-	memset(&server, 0, sizeof(struct sockaddr_in));
-    char hostname[MAXLINE], port[MAXLINE];
-    get_host_ip_and_port(uri, hostname, port);
-    printf("[3] parse url: hostname: %s, port: %s.\n", hostname, port);
-
-    int server_fd = Open_clientfd(hostname, port);
-
-    /**
-     * 4. ... (TODO: check and update header.)
-     */
-
-
-    /**
-     * 5. forward client's request to server.
-     * - compare to serve_static().
-     */
-    char new_buff[MAXBUF];
-    char filename[MAXLINE];
-    get_filename(uri, filename);
-    sprintf(new_buff, "GET %s HTTP/1.0\r\nHost: %s\r\n%sConnection: close\r\nProxy-Connection: close\r\n\r\n", filename, hostname, user_agent_hdr);
-    // [TODO]: Finally, if a browser sends any additional request headers as part of an HTTP request, your proxy should forward them unchanged.
-
-    // char* new_buff = "GET /home2.html HTTP/1.1\r\n\r\n";
-    printf("[5] new buf content:\n %s", new_buff);
-
-    Rio_writen(server_fd, new_buff, MAXLINE);
-
-
-    rio_t s_rio;
-    Rio_readinitb(&s_rio, server_fd);
-    char s_buf[MAXBUF];
-    while(Rio_readnb(&s_rio, s_buf, MAXLINE) > 0) {
-        printf("==s_buf:==\n");
-        printf("%s", s_buf);
+        while(strcmp(buf, "\r\n")) {          //line:netp:readhdrs:checkterm
+            Rio_readlineb(&rio, buf, MAXLINE);
+            printf("%s", buf);
+        }
         printf("===\n");
-        Rio_writen(client_fd, s_buf, sizeof(s_buf)); 
+
+        /**
+         * 3. eatablish connection with server.
+         * - assume we have ip: localhost; port: 3010.
+         */
+        struct sockaddr_in server;
+        struct hostent *he;	 /* structure for resolving names into IP addresses */
+        socklen_t socklen;	 /* length of the socket structure sockaddr         */
+
+        memset(&server, 0, sizeof(struct sockaddr_in));
+        char hostname[MAXLINE], port[MAXLINE];
+        get_host_ip_and_port(uri, hostname, port);
+        printf("[3] parse url: hostname: %s, port: %s.\n", hostname, port);
+
+        int server_fd = Open_clientfd(hostname, port);
+
+        /**
+         * 4. ... (TODO: check and update header.)
+         */
+
+
+        /**
+         * 5. forward client's request to server.
+         * - compare to serve_static().
+         */
+        char new_buff[MAXBUF];
+        char filename[MAXLINE];
+        get_filename(uri, filename);
+        sprintf(new_buff, "GET %s HTTP/1.0\r\nHost: %s\r\n%sConnection: close\r\nProxy-Connection: close\r\n\r\n", filename, hostname, user_agent_hdr);
+        // [TODO]: Finally, if a browser sends any additional request headers as part of an HTTP request, your proxy should forward them unchanged.
+
+        // char* new_buff = "GET /home2.html HTTP/1.1\r\n\r\n";
+        printf("[5] new buf content:\n %s", new_buff);
+
+        Rio_writen(server_fd, new_buff, MAXLINE);
+
+
+        rio_t s_rio;
+        Rio_readinitb(&s_rio, server_fd);
+        char s_buf[MAXBUF];
+        while(Rio_readnb(&s_rio, s_buf, MAXLINE) > 0) {
+            printf("==s_buf:==\n");
+            printf("%s", s_buf);
+            Rio_writen(client_fd, s_buf, sizeof(s_buf)); 
+        }
+        printf("===\n");
+
+        Close(client_fd);  // line:netp:tiny:close
+        Close(server_fd);
     }
-    printf("==finish==");
-
-
-
-    // /**
-    //  * 6. Receive response from server.
-    //  */
-    // rio_t s_rio;
-    // char s_buf[MAXLINE];
-    // s_buf[0] = '\0';
-
-    // /* Read server response headers. */
-    // Rio_readinitb(&s_rio, server_fd);
-    // printf("[6] server response header:\n");
-    // printf("%s", s_buf);
-    // while(strcmp(s_buf, "\r\n")) {          //line:netp:readhdrs:checkterm
-	//     Rio_readlineb(&s_rio, s_buf, MAXLINE);
-    //   /* TODO: parse every useful information!
-    //    * such as content-length, later read need this information.
-    //    */
-	//     printf("%s", s_buf);
-
-    //   /**
-    //    * parse and send to the client side at the same time.
-    //    */
-    //   Rio_writen(client_fd, s_buf, MAXLINE);
-    // }
-    // printf("===header finished===\n");
-
-    // /* Read server response body. */
-    // int filesize = 120; // TODO: fix this hard-coded value.
-    // char response_body[filesize];
-    // response_body[0] = '\0';
-    // printf("[6] server response body:\n");
-    // Rio_readnb(&s_rio, response_body, filesize);
-    // response_body[sizeof(response_body)] = '\0';
-    // printf("%s", response_body);
-    // printf("===body finished===\n");
-    
-    // /* Read out the extra empty line. */
-    // // char extra[MAXLINE];
-    // // Rio_readlineb(&s_rio, extra, MAXLINE);
-
-    // /**
-    //  * 7. forward response to client.
-    //  * - reponse header has been forwarded during parsing.
-    //  * - this section only forwards response body.
-    //  */
-    
-    // Rio_writen(client_fd, response_body, filesize); 
-    // printf("[7] support to send %d, actually send %d\n", filesize, -1);
-    // // Rio_writen(client_fd, "\r\n", sizeof("\r\n")); 
-
-    Close(client_fd);  // line:netp:tiny:close
-    Close(server_fd);
+    else {
+        Wait(NULL);
+    }   
   }
   
   return 0;
