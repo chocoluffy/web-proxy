@@ -181,6 +181,20 @@ void update_LRU(char *url, char *body, record *rec_table, entry *lru, int *rec_t
     *rec_tb_len = *rec_tb_len + 1;
 }
 
+char* get_LFU(char *url, lfu_entry *lfu) {
+    /**
+     * return -1: content from this url is not cached in lfu table.
+     */
+    for (int i = 0; i < 3; i++) {
+        if (lfu[i].freq == 0) return NULL; // lfu_table has not been initialized.
+        if (strcmp(url, lfu[i].url) == 0) {
+            return lfu[i].body;
+            // printf("[get_LFU]: res: %s\n", res);
+        }
+    }
+    return NULL;
+}
+
 //int main(){
 //    lfu_entry lfu[3];
 //    record rec_table[1000];

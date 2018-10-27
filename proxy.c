@@ -52,6 +52,8 @@ int main(int argc, char **argv) {
   proxy_fd = Open_listenfd(argv[1]);
 
   while (1) {
+
+
     // 1. establish connection with client: bind argv[1] to proxy_fd.
     client_len = sizeof(client_addr);
 
@@ -59,15 +61,15 @@ int main(int argc, char **argv) {
                        &client_len);  // line:netp:tiny:accept
     Getnameinfo((SA *)&client_addr, client_len, hostname, MAXLINE, port,
                 MAXLINE, 0);
-    printf("Accepted connection from (%s, %s)\n", hostname, port);
+    printf("[start]: Accepted connection from (%s, %s)\n", hostname, port);
 
     // Each client connection takes one thread.
-    int pid = Fork();
-    if (pid < 0) {
-      Close(client_fd);
-      break;
-    }
-    if (pid == 0) {
+    // int pid = Fork();
+    // if (pid < 0) {
+    //   Close(client_fd);
+    //   break;
+    // }
+    // if (pid == 0) {
       /**
        * 2. parse client request header. get server addr & port.
        */
@@ -83,7 +85,7 @@ int main(int argc, char **argv) {
       // buf contains: [method, uri, version].
       sscanf(buf, "%s %s %s", method, uri,
              version);  // line:netp:doit:parserequest
-      printf("[2] method: %s, uri: %s, version: %s\n", method, uri, version);
+    //   printf("[2] method: %s, uri: %s, version: %s\n", method, uri, version);
 
       while (strcmp(buf, "\r\n")) {  // line:netp:readhdrs:checkterm
         Rio_readlineb(&rio, buf, MAXLINE);
@@ -94,14 +96,25 @@ int main(int argc, char **argv) {
       /**
        * Hit Cache.
        */
-      char cache_res[MAXBUF];
-      int res = get_LFU(uri, lfu, cache_res);
-      if (res != -1) {
-          Rio_writen(client_fd, cache_res, sizeof(cache_res));
+      char* cache_res = get_LFU(uri, lfu);
+      if (cache_res != NULL) {
+          Rio_writen(client_fd, cache_res, MAXBUF);
           //   return cached response to client. close client connection.
+          printf("----------hit cache-------------\n");
+          printf("return response: %s\n", cache_res);
+          printf("--------------------------------\n");
           Close(client_fd);
-          break;
+          continue;
+          // break; 
       }
+      printf("===hit cache fail!===\n");
+    printf("----------position 1-------------\n");
+
+      for(int i = 0; i < 3; i++) {
+          printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+      }
+        printf("--------------------------------\n");
+
 
       /**
        * 3. eatablish connection with server.
@@ -140,10 +153,7 @@ int main(int argc, char **argv) {
       rio_t s_rio;
       Rio_readinitb(&s_rio, server_fd);
       char s_buf[MAXBUF];
-      int current_read = 0;
-      int nb;
-      while ((nb = Rio_readnb(&s_rio, s_buf, MAXLINE)) > 0) {
-        current_read += nb;
+      while (Rio_readnb(&s_rio, s_buf, MAXLINE) > 0) {
         printf("==s_buf:==\n");
         printf("%s", s_buf);
         Rio_writen(client_fd, s_buf, sizeof(s_buf));
@@ -151,14 +161,21 @@ int main(int argc, char **argv) {
       printf("===\n");
 
       // Save Server Response into cache.
-      if(current_read < MAX_OBJECT_SIZE) {
+      printf("[cache] current_read: %d, max: %d\n", sizeof(s_buf), MAX_OBJECT_SIZE);
+      if(sizeof(s_buf) < MAX_OBJECT_SIZE) {
           update_LFU(uri, s_buf, rec_table, lfu, rec_tb_len);
+          printf("[cache] update cache success!\n");
       }
+      printf("----------position 2-------------\n");
+      for(int i = 0; i < 3; i++) {
+          printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+      }
+      printf("---------------------------------\n");
 
       Close(client_fd);
       Close(server_fd);
-      break;
-    }
+    //   break;
+    // }
   }
 
   return 0;
