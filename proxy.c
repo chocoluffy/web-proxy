@@ -102,58 +102,67 @@ int main(int argc, char **argv) {
     Rio_writen(server_fd, new_buff, MAXLINE);
 
 
-
-
-
-
-    /**
-     * 6. Receive response from server.
-     */
     rio_t s_rio;
-    char s_buf[MAXLINE];
-    s_buf[0] = '\0';
-
-    /* Read server response headers. */
     Rio_readinitb(&s_rio, server_fd);
-    printf("[6] server response header:\n");
-    printf("%s", s_buf);
-    while(strcmp(s_buf, "\r\n")) {          //line:netp:readhdrs:checkterm
-	    Rio_readlineb(&s_rio, s_buf, MAXLINE);
-      /* TODO: parse every useful information!
-       * such as content-length, later read need this information.
-       */
-	    printf("%s", s_buf);
-
-      /**
-       * parse and send to the client side at the same time.
-       */
-      Rio_writen(client_fd, s_buf, MAXLINE);
+    char s_buf[MAXBUF];
+    while(Rio_readnb(&s_rio, s_buf, MAXLINE) > 0) {
+        printf("==s_buf:==\n");
+        printf("%s", s_buf);
+        printf("===\n");
+        Rio_writen(client_fd, s_buf, sizeof(s_buf)); 
     }
-    printf("===header finished===\n");
+    printf("==finish==");
 
-    /* Read server response body. */
-    int filesize = 120; // TODO: fix this hard-coded value.
-    char response_body[filesize];
-    response_body[0] = '\0';
-    printf("[6] server response body:\n");
-    Rio_readnb(&s_rio, response_body, filesize);
-    response_body[sizeof(response_body)] = '\0';
-    printf("%s", response_body);
-    printf("===body finished===\n");
-    
-    /* Read out the extra empty line. */
-    // char extra[MAXLINE];
-    // Rio_readlineb(&s_rio, extra, MAXLINE);
 
-    /**
-     * 7. forward response to client.
-     * - reponse header has been forwarded during parsing.
-     * - this section only forwards response body.
-     */
+
+    // /**
+    //  * 6. Receive response from server.
+    //  */
+    // rio_t s_rio;
+    // char s_buf[MAXLINE];
+    // s_buf[0] = '\0';
+
+    // /* Read server response headers. */
+    // Rio_readinitb(&s_rio, server_fd);
+    // printf("[6] server response header:\n");
+    // printf("%s", s_buf);
+    // while(strcmp(s_buf, "\r\n")) {          //line:netp:readhdrs:checkterm
+	//     Rio_readlineb(&s_rio, s_buf, MAXLINE);
+    //   /* TODO: parse every useful information!
+    //    * such as content-length, later read need this information.
+    //    */
+	//     printf("%s", s_buf);
+
+    //   /**
+    //    * parse and send to the client side at the same time.
+    //    */
+    //   Rio_writen(client_fd, s_buf, MAXLINE);
+    // }
+    // printf("===header finished===\n");
+
+    // /* Read server response body. */
+    // int filesize = 120; // TODO: fix this hard-coded value.
+    // char response_body[filesize];
+    // response_body[0] = '\0';
+    // printf("[6] server response body:\n");
+    // Rio_readnb(&s_rio, response_body, filesize);
+    // response_body[sizeof(response_body)] = '\0';
+    // printf("%s", response_body);
+    // printf("===body finished===\n");
     
-    Rio_writen(client_fd, response_body, filesize); 
-    printf("[7] support to send %d, actually send %d\n", filesize, -1);
-    // Rio_writen(client_fd, "\r\n", sizeof("\r\n")); 
+    // /* Read out the extra empty line. */
+    // // char extra[MAXLINE];
+    // // Rio_readlineb(&s_rio, extra, MAXLINE);
+
+    // /**
+    //  * 7. forward response to client.
+    //  * - reponse header has been forwarded during parsing.
+    //  * - this section only forwards response body.
+    //  */
+    
+    // Rio_writen(client_fd, response_body, filesize); 
+    // printf("[7] support to send %d, actually send %d\n", filesize, -1);
+    // // Rio_writen(client_fd, "\r\n", sizeof("\r\n")); 
 
     Close(client_fd);  // line:netp:tiny:close
     Close(server_fd);
