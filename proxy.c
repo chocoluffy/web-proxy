@@ -99,8 +99,14 @@ int main(int argc, char **argv) {
      * 5. forward client's request to server.
      * - compare to serve_static().
      */
-    char* new_buff = "GET /home2.html HTTP/1.1\r\n\r\n";
-    printf("[5] new buf content: %s\n", new_buff);
+    char new_buff[MAXBUF];
+    char filename[MAXLINE];
+    get_filename(uri, filename);
+    sprintf(new_buff, "GET %s HTTP/1.0\r\nHost: %s\r\n%sConnection: close\r\nProxy-Connection: close\r\n\r\n", filename, hostname, user_agent_hdr);
+    // [TODO]: Finally, if a browser sends any additional request headers as part of an HTTP request, your proxy should forward them unchanged.
+
+    // char* new_buff = "GET /home2.html HTTP/1.1\r\n\r\n";
+    printf("[5] new buf content:\n %s", new_buff);
 
     Rio_writen(server_fd, new_buff, MAXLINE);
 
