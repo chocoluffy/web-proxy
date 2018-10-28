@@ -63,12 +63,12 @@ int main(int argc, char **argv) {
 
   while (1) {
 
-        printf("----------position 0-------------\n");
+      //   printf("----------position 0-------------\n");
 
-      for(int i = 0; i < 3; i++) {
-          printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
-      }
-        printf("--------------------------------\n");
+      // for(int i = 0; i < 3; i++) {
+      //     printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+      // }
+      //   printf("--------------------------------\n");
 
 
     // 1. establish connection with client: bind argv[1] to proxy_fd.
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
        * Hit Cache.
        */
       char* lfu_cache_res = get_LFU(uri, lfu);
-      char* lru_cache_res = get_LRU(uri, lru);
+      // char* lru_cache_res = get_LRU(uri, lru);
       if (lfu_cache_res != NULL) {
           Rio_writen(client_fd, lfu_cache_res, MAXBUF);
           //   return cached response to client. close client connection.
@@ -125,16 +125,16 @@ int main(int argc, char **argv) {
           continue;
           // break; 
       }
-      if (lru_cache_res != NULL) {
-          Rio_writen(client_fd, lru_cache_res, MAXBUF);
-          //   return cached response to client. close client connection.
-          printf("----------hit cache LRU-------------\n");
-          printf("return response: %s\n", lru_cache_res);
-          printf("--------------------------------\n");
-          Close(client_fd);
-          continue;
-          // break; 
-      }
+      // if (lru_cache_res != NULL) {
+      //     Rio_writen(client_fd, lru_cache_res, MAXBUF);
+      //     //   return cached response to client. close client connection.
+      //     printf("----------hit cache LRU-------------\n");
+      //     printf("return response: %s\n", lru_cache_res);
+      //     printf("--------------------------------\n");
+      //     Close(client_fd);
+      //     continue;
+      //     // break; 
+      // }
       printf("===hit cache fail!===\n");
     //     printf("----------position 1-------------\n");
 
@@ -194,12 +194,13 @@ int main(int argc, char **argv) {
           update_LFU(uri, s_buf, rec_table, lfu, rec_tb_len, (int)time(NULL));
         //   update_LRU(uri, s_buf, rec_table, lru, rec_tb_len, (int)time(NULL));
           printf("[cache] update cache success!\n");
+          printf("----------update cache with server response-------------\n");
+          for(int i = 0; i < 3; i++) {
+              printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+          }
+          printf("--------------------------------------------------------\n");
       }
-    //   printf("----------position 2-------------\n");
-    //   for(int i = 0; i < 3; i++) {
-    //       printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
-    //   }
-    //   printf("---------------------------------\n");
+
 
       Close(client_fd);
       Close(server_fd);
