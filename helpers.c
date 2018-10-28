@@ -185,6 +185,14 @@ char* get_LFU(char *url, entry *lfu) {
     /**
      * return NULL: content from this url is not cached in lfu table.
      */
+
+    printf("-----------get_LFU()------------\n");
+
+    for(int i = 0; i < 3; i++) {
+        printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+    }
+    printf("--------------------------------\n");
+
     for (int i = 0; i < 3; i++) {
         if (lfu[i].freq == 0) return NULL; // lfu_table has not been initialized.
         if (strcmp(url, lfu[i].url) == 0) {

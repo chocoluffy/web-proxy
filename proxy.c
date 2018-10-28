@@ -63,6 +63,9 @@ int main(int argc, char **argv) {
 
   while (1) {
 
+      printf("\n\n\n");
+      printf("\n\n\n");
+
       //   printf("----------position 0-------------\n");
 
       // for(int i = 0; i < 3; i++) {
@@ -80,6 +83,13 @@ int main(int argc, char **argv) {
                 MAXLINE, 0);
     printf("[start]: Accepted connection from (%s, %s)\n", hostname, port);
 
+    printf("----------LFU cache. after connection-------------\n");
+
+    for(int i = 0; i < 3; i++) {
+        printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+    }
+    printf("--------------------------------\n");
+
     // Each client connection takes one thread.
     // int pid = Fork();
     // if (pid < 0) {
@@ -90,7 +100,8 @@ int main(int argc, char **argv) {
       /**
        * 2. parse client request header. get server addr & port.
        */
-      char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
+      char buf[MAXLINE], method[MAXLINE], version[MAXLINE];
+      char *uri;
       rio_t rio;
 
       /* Read request line and headers */
@@ -100,9 +111,10 @@ int main(int argc, char **argv) {
     //   printf("%s", buf);
 
       // buf contains: [method, uri, version].
+      uri = malloc(MAXLINE * sizeof(char));
       sscanf(buf, "%s %s %s", method, uri,
              version);  // line:netp:doit:parserequest
-    //   printf("[2] method: %s, uri: %s, version: %s\n", method, uri, version);
+      printf("method: %s, uri: %s, version: %s\n", method, uri, version);
 
       while (strcmp(buf, "\r\n")) {  // line:netp:readhdrs:checkterm
         Rio_readlineb(&rio, buf, MAXLINE);
@@ -180,7 +192,9 @@ int main(int argc, char **argv) {
 
       rio_t s_rio;
       Rio_readinitb(&s_rio, server_fd);
-      char s_buf[MAXBUF];
+      
+      char * s_buf;
+      s_buf = malloc(MAXBUF * sizeof(char));
       while (Rio_readnb(&s_rio, s_buf, MAXLINE) > 0) {
         printf("==s_buf:==\n");
         printf("%s", s_buf);
