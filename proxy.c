@@ -23,13 +23,23 @@ int main(int argc, char **argv) {
   socklen_t client_len, server_len;
   struct sockaddr_storage client_addr, server_addr;
 
-  lfu_entry lfu[3];
+  entry lfu[3];
+  entry lru[1000];
   // Initalize the lfu array.
   for (int i = 0; i < 3; i++) {
     lfu[i].url = NULL;
     lfu[i].freq = 0;
     lfu[i].body = NULL;
+    lfu[i].time = 0;
   }
+  
+  for(int i = 0; i < 1000; i++) {
+    lru[i].url = NULL;
+    lru[i].freq = 0;
+    lru[i].body = NULL;
+    lru[i].time = 0;
+  }
+
   record rec_table[1000];
   int rec_tb_len = 0;
 
@@ -52,6 +62,13 @@ int main(int argc, char **argv) {
   proxy_fd = Open_listenfd(argv[1]);
 
   while (1) {
+
+        printf("----------position 0-------------\n");
+
+      for(int i = 0; i < 3; i++) {
+          printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+      }
+        printf("--------------------------------\n");
 
 
     // 1. establish connection with client: bind argv[1] to proxy_fd.
@@ -78,9 +95,9 @@ int main(int argc, char **argv) {
 
       /* Read request line and headers */
       Rio_readinitb(&rio, client_fd);
-      printf("===client request header===\n");
+    //   printf("===client request header===\n");
       Rio_readlineb(&rio, buf, MAXLINE);
-      printf("%s", buf);
+    //   printf("%s", buf);
 
       // buf contains: [method, uri, version].
       sscanf(buf, "%s %s %s", method, uri,
@@ -89,31 +106,42 @@ int main(int argc, char **argv) {
 
       while (strcmp(buf, "\r\n")) {  // line:netp:readhdrs:checkterm
         Rio_readlineb(&rio, buf, MAXLINE);
-        printf("%s", buf);
+        // printf("%s", buf);
       }
-      printf("===\n");
+    //   printf("===\n");
 
       /**
        * Hit Cache.
        */
-      char* cache_res = get_LFU(uri, lfu);
-      if (cache_res != NULL) {
-          Rio_writen(client_fd, cache_res, MAXBUF);
+      char* lfu_cache_res = get_LFU(uri, lfu);
+      char* lru_cache_res = get_LRU(uri, lru);
+      if (lfu_cache_res != NULL) {
+          Rio_writen(client_fd, lfu_cache_res, MAXBUF);
           //   return cached response to client. close client connection.
-          printf("----------hit cache-------------\n");
-          printf("return response: %s\n", cache_res);
+          printf("----------hit cache LFU-------------\n");
+          printf("return response: %s\n", lfu_cache_res);
+          printf("--------------------------------\n");
+          Close(client_fd);
+          continue;
+          // break; 
+      }
+      if (lru_cache_res != NULL) {
+          Rio_writen(client_fd, lru_cache_res, MAXBUF);
+          //   return cached response to client. close client connection.
+          printf("----------hit cache LRU-------------\n");
+          printf("return response: %s\n", lru_cache_res);
           printf("--------------------------------\n");
           Close(client_fd);
           continue;
           // break; 
       }
       printf("===hit cache fail!===\n");
-    printf("----------position 1-------------\n");
+    //     printf("----------position 1-------------\n");
 
-      for(int i = 0; i < 3; i++) {
-          printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
-      }
-        printf("--------------------------------\n");
+    //   for(int i = 0; i < 3; i++) {
+    //       printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+    //   }
+    //     printf("--------------------------------\n");
 
 
       /**
@@ -163,14 +191,15 @@ int main(int argc, char **argv) {
       // Save Server Response into cache.
       printf("[cache] current_read: %d, max: %d\n", sizeof(s_buf), MAX_OBJECT_SIZE);
       if(sizeof(s_buf) < MAX_OBJECT_SIZE) {
-          update_LFU(uri, s_buf, rec_table, lfu, rec_tb_len);
+          update_LFU(uri, s_buf, rec_table, lfu, rec_tb_len, (int)time(NULL));
+        //   update_LRU(uri, s_buf, rec_table, lru, rec_tb_len, (int)time(NULL));
           printf("[cache] update cache success!\n");
       }
-      printf("----------position 2-------------\n");
-      for(int i = 0; i < 3; i++) {
-          printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
-      }
-      printf("---------------------------------\n");
+    //   printf("----------position 2-------------\n");
+    //   for(int i = 0; i < 3; i++) {
+    //       printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+    //   }
+    //   printf("---------------------------------\n");
 
       Close(client_fd);
       Close(server_fd);

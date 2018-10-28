@@ -138,7 +138,7 @@ void update_LRU(char *url, char *body, record *rec_table, entry *lru, int *rec_t
         } else {
             if (strcmp(lru[i].url, url) == 0) {
                 lru[i].time = time;
-                lru[i].freq ++;
+                // lru[i].freq ++;
                 return;
             }
             if (lru[i].time < lru[min_entry].time) {
@@ -149,7 +149,7 @@ void update_LRU(char *url, char *body, record *rec_table, entry *lru, int *rec_t
     for (int i = 0; i < *rec_tb_len; i++) {
         if (strcmp(rec_table[i].url, url) == 0) {
             rec_table[i].time = time;
-            rec_table[i].freq ++;
+            // rec_table[i].freq ++;
             if (rec_table[i].time >= lru[min_entry].time) {
                 int tmp1 = rec_table[i].freq;
                 int tmp2 = rec_table[i].time;
@@ -181,14 +181,29 @@ void update_LRU(char *url, char *body, record *rec_table, entry *lru, int *rec_t
     *rec_tb_len = *rec_tb_len + 1;
 }
 
-char* get_LFU(char *url, lfu_entry *lfu) {
+char* get_LFU(char *url, entry *lfu) {
     /**
-     * return -1: content from this url is not cached in lfu table.
+     * return NULL: content from this url is not cached in lfu table.
      */
     for (int i = 0; i < 3; i++) {
         if (lfu[i].freq == 0) return NULL; // lfu_table has not been initialized.
         if (strcmp(url, lfu[i].url) == 0) {
+            printf("[get_LFU]: cache key: %s, my key: %s\n", lfu[i].url, url);
             return lfu[i].body;
+        }
+    }
+    return NULL;
+}
+
+char* get_LRU(char *url, entry *lru) {
+    /**
+     * return NULL: content from this url is not cached in lfu table.
+     */
+    for (int i = 0; i < 1000; i++) {
+        if (lru[i].freq == 0) return NULL; // lfu_table has not been initialized.
+        if (strcmp(url, lru[i].url) == 0) {
+            printf("[get_LRU]: cache key: %s, my key: %s\n", lru[i].url, url);
+            return lru[i].body;
             // printf("[get_LFU]: res: %s\n", res);
         }
     }
