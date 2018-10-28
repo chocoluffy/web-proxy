@@ -91,12 +91,12 @@ int main(int argc, char **argv) {
     printf("--------------------------------\n");
 
     // Each client connection takes one thread.
-    // int pid = Fork();
-    // if (pid < 0) {
-    //   Close(client_fd);
-    //   break;
-    // }
-    // if (pid == 0) {
+    int pid = Fork();
+    if (pid < 0) {
+      Close(client_fd);
+      break;
+    }
+    if (pid == 0) {
       /**
        * 2. parse client request header. get server addr & port.
        */
@@ -126,30 +126,32 @@ int main(int argc, char **argv) {
        * Hit Cache.
        */
       char* lfu_cache_res = get_LFU(uri, lfu);
-
-      // char* lru_cache_res = get_LRU(uri, lru);
+      char* lru_cache_res = get_LRU(uri, lru);
       if (lfu_cache_res != NULL) {
           update_LFU(uri, lfu_cache_res, rec_table, lfu, &rec_tb_len, (int)time(NULL));
-          
+          update_LRU(uri, lru_cache_res, rec_table, lru, &rec_tb_len, (int)time(NULL));
           Rio_writen(client_fd, lfu_cache_res, MAXBUF);
-          //   return cached response to client. close client connection.
           printf("----------hit cache LFU-------------\n");
           printf("return response: %s\n", lfu_cache_res);
           printf("--------------------------------\n");
           Close(client_fd);
-          continue;
-          // break; 
+          // continue;
+          break; 
       }
-      // if (lru_cache_res != NULL) {
-      //     Rio_writen(client_fd, lru_cache_res, MAXBUF);
-      //     //   return cached response to client. close client connection.
-      //     printf("----------hit cache LRU-------------\n");
-      //     printf("return response: %s\n", lru_cache_res);
-      //     printf("--------------------------------\n");
-      //     Close(client_fd);
-      //     continue;
-      //     // break; 
-      // }
+      if (lru_cache_res != NULL) {
+          update_LFU(uri, lfu_cache_res, rec_table, lfu, &rec_tb_len, (int)time(NULL));
+          update_LRU(uri, lru_cache_res, rec_table, lru, &rec_tb_len, (int)time(NULL));
+          Rio_writen(client_fd, lru_cache_res, MAXBUF);
+          
+          printf("----------hit cache LRU-------------\n");
+          printf("return response: %s\n", lru_cache_res);
+          printf("--------------------------------\n");
+          Close(client_fd);
+          // continue;
+          break; 
+      }
+
+
       printf("===hit cache fail!===\n");
     //     printf("----------position 1-------------\n");
 
@@ -209,21 +211,35 @@ int main(int argc, char **argv) {
       // Save Server Response into cache.
       printf("[cache] current_read: %d, max: %d\n", sizeof(s_buf), MAX_OBJECT_SIZE);
       if(sizeof(s_buf) < MAX_OBJECT_SIZE) {
-          update_LFU(uri, s_buf, rec_table, lfu, &rec_tb_len, (int)time(NULL));
-        //   update_LRU(uri, s_buf, rec_table, lru, rec_tb_len, (int)time(NULL));
-          printf("[cache] update cache success!\n");
+          int now = (int) time(NULL);
+          update_LFU(uri, s_buf, rec_table, lfu, &rec_tb_len, now);
+          update_LRU(uri, s_buf, rec_table, lru, &rec_tb_len, now);
+
+          printf("\n\n*************************");
+
+          printf("[LFU cache] update cache success!\n");
           printf("----------update cache with server response-------------\n");
           for(int i = 0; i < 3; i++) {
               printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
           }
           printf("--------------------------------------------------------\n");
+
+          printf("[LRU cache] update cache success!\n");
+          printf("----------update cache with server response-------------\n");
+          for(int i = 0; i < 3; i++) {
+              printf("[lru entry]: url: %s, body: %s, fre: %d, time: %d.\n", lru[i].url, lru[i].body, lru[i].freq, lru[i].time);
+          }
+          printf("--------------------------------------------------------\n");
+
+          printf("\n\n");
       }
 
 
       Close(client_fd);
       Close(server_fd);
-    //   break;
-    // }
+
+      break;
+    }
   }
 
   return 0;

@@ -138,7 +138,7 @@ void update_LRU(char *url, char *body, record *rec_table, entry *lru, int *rec_t
         } else {
             if (strcmp(lru[i].url, url) == 0) {
                 lru[i].time = time;
-                // lru[i].freq ++;
+                lru[i].freq ++;
                 return;
             }
             if (lru[i].time < lru[min_entry].time) {
@@ -185,13 +185,6 @@ char* get_LFU(char *url, entry *lfu) {
     /**
      * return NULL: content from this url is not cached in lfu table.
      */
-
-    printf("-----------get_LFU()------------\n");
-
-    for(int i = 0; i < 3; i++) {
-        printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
-    }
-    printf("--------------------------------\n");
 
     for (int i = 0; i < 3; i++) {
         if (lfu[i].freq == 0) return NULL; // lfu_table has not been initialized.
