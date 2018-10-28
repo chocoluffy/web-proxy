@@ -126,8 +126,11 @@ int main(int argc, char **argv) {
        * Hit Cache.
        */
       char* lfu_cache_res = get_LFU(uri, lfu);
+
       // char* lru_cache_res = get_LRU(uri, lru);
       if (lfu_cache_res != NULL) {
+          update_LFU(uri, lfu_cache_res, rec_table, lfu, &rec_tb_len, (int)time(NULL));
+          
           Rio_writen(client_fd, lfu_cache_res, MAXBUF);
           //   return cached response to client. close client connection.
           printf("----------hit cache LFU-------------\n");
@@ -198,14 +201,15 @@ int main(int argc, char **argv) {
       while (Rio_readnb(&s_rio, s_buf, MAXLINE) > 0) {
         printf("==s_buf:==\n");
         printf("%s", s_buf);
-        Rio_writen(client_fd, s_buf, sizeof(s_buf));
+        Rio_writen(client_fd, s_buf, MAXBUF); 
+        // [TODO]: accumualte s_buf in case response body > 1 * MAXLINE. 
       }
       printf("===\n");
 
       // Save Server Response into cache.
       printf("[cache] current_read: %d, max: %d\n", sizeof(s_buf), MAX_OBJECT_SIZE);
       if(sizeof(s_buf) < MAX_OBJECT_SIZE) {
-          update_LFU(uri, s_buf, rec_table, lfu, rec_tb_len, (int)time(NULL));
+          update_LFU(uri, s_buf, rec_table, lfu, &rec_tb_len, (int)time(NULL));
         //   update_LRU(uri, s_buf, rec_table, lru, rec_tb_len, (int)time(NULL));
           printf("[cache] update cache success!\n");
           printf("----------update cache with server response-------------\n");

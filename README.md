@@ -9,3 +9,6 @@
 - use Rio instead of normal IO for read and write.
 
 - whenver init with `char var[xx]`, note that such var refers to random memory, should mark the ending position as `\0`, such that we know where to stop, and not printing out random trash.
+
+LFU policy:
+- when frequency = 1, >= min entry in LFU table will not evict any existing entry. when frequency > 1, >= will take effect.
