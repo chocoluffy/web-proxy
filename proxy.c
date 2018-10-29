@@ -14,6 +14,14 @@ static const char *user_agent_hdr =
     "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 "
     "Firefox/10.0.3\r\n";
 
+struct thread_info {    /* Used as argument to update() */
+  entry* lfu;
+  entry* lru;
+  record* rec_table;
+  int rec_tb_len;
+  int client_fd; 
+};
+
 int main(int argc, char **argv) {
   printf("%s", user_agent_hdr);
   int proxy_fd;
@@ -83,20 +91,32 @@ int main(int argc, char **argv) {
                 MAXLINE, 0);
     printf("[start]: Accepted connection from (%s, %s)\n", hostname, port);
 
-    printf("----------LFU cache. after connection-------------\n");
+    // printf("----------LFU cache. after connection-------------\n");
 
-    for(int i = 0; i < 3; i++) {
-        printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
-    }
-    printf("--------------------------------\n");
+    // for(int i = 0; i < 3; i++) {
+    //     printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+    // }
+    // printf("--------------------------------\n");
 
     // Each client connection takes one thread.
-    int pid = Fork();
-    if (pid < 0) {
-      Close(client_fd);
-      break;
-    }
-    if (pid == 0) {
+    // int pid = Fork();
+    // if (pid < 0) {
+    //   Close(client_fd);
+    //   break;
+    // }
+    // if (pid == 0) {
+
+
+    // Use pthread, to create a new thread each time having a new connection with client.
+    // struct thread_info *tinfo = calloc(1, sizeof(struct thread_info));
+    // pthread_t *tid = malloc( 1 * sizeof(pthread_t) );
+
+    // tinfo->lfu = lfu;
+    // tinfo->lru = lru;
+    // tinfo->rec_table = rec_table;
+    // tinfo->rec_tb_len = rec_tb_len;
+    // tinfo->client_fd = client_fd;
+
       /**
        * 2. parse client request header. get server addr & port.
        */
@@ -136,7 +156,7 @@ int main(int argc, char **argv) {
           printf("--------------------------------\n");
           Close(client_fd);
           // continue;
-          break; 
+          // break; 
       }
       if (lru_cache_res != NULL) {
           update_LFU(uri, lfu_cache_res, rec_table, lfu, &rec_tb_len, (int)time(NULL));
@@ -148,7 +168,7 @@ int main(int argc, char **argv) {
           printf("--------------------------------\n");
           Close(client_fd);
           // continue;
-          break; 
+          // break; 
       }
 
 
@@ -238,9 +258,9 @@ int main(int argc, char **argv) {
       Close(client_fd);
       Close(server_fd);
 
-      break;
+      // break;
     }
-  }
+  // }
 
   return 0;
 }
