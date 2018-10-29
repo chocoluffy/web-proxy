@@ -74,6 +74,7 @@ void *update(void *arg) {
         printf("return response: %s\n", lfu_cache_res);
         printf("--------------------------------\n");
         Close(client_fd);
+        return NULL;
     }
     if (lru_cache_res != NULL) {
         pthread_mutex_lock(&lock);
@@ -85,6 +86,7 @@ void *update(void *arg) {
         printf("return response: %s\n", lru_cache_res);
         printf("--------------------------------\n");
         Close(client_fd);
+        return NULL;
     }
 
 
