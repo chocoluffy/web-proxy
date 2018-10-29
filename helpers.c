@@ -66,119 +66,199 @@ void get_filename(char *url, char *filename){
     s = strchr(s, '/');
     strcpy(filename, s);
 }
+//
+//void update_LFU(char *url, char *body, record *rec_table, entry *lfu, int *rec_tb_len, int time){
+//    /**
+//     * Update LFU:
+//     * 1. If the given URL appear in the cache, then just update the frequency adding 1
+//     * 2. Otherwise, if the URL appeared in records, increase its frequency by 1 and then check
+//     *    whether it is frequent enough to be in the cache. If so, update cache.
+//     * 3. If this is the first time this URL appears, add the URL to the record table with
+//     *    frequency 1.
+//     */
+//    int min_entry = 0;
+//    for (int i =0; i< 3; i++){
+//        if (lfu[i].freq == 0){
+//            lfu[i].url = url;
+//            lfu[i].freq = 1;
+//            lfu[i].time = time;
+//            lfu[i].body = body;
+//            return;
+//        }
+//        else {
+//            if (strcmp(lfu[i].url, url) == 0) {
+//                lfu[i].freq ++;
+//                return;
+//            }
+//            if (lfu[i].freq < lfu[min_entry].freq){
+//                min_entry = i;
+//            }
+//        }
+//    }
+//    for (int i = 0; i < *rec_tb_len; i++){
+//        if (strcmp(rec_table[i].url, url) == 0) {
+//            rec_table[i].freq++;
+//            if (rec_table[i].freq >= lfu[min_entry].freq) {
+//                int tmp1 = rec_table[i].freq;
+//                int tmp2 = rec_table[i].time;
+//                rec_table[i].url = lfu[min_entry].url;
+//                rec_table[i].freq = lfu[min_entry].freq;
+//                rec_table[i].time = lfu[min_entry].time;
+//                lfu[min_entry].url = url;
+//                lfu[min_entry].freq = tmp1;
+//                lfu[min_entry].time = tmp2;
+//                lfu[min_entry].body = body;
+//            }
+//            return;
+//        }
+//    }
+//    rec_table[*rec_tb_len].url = url;
+//    rec_table[*rec_tb_len].freq = 1;
+//    rec_table[*rec_tb_len].time = time;
+//    *rec_tb_len = *rec_tb_len + 1;
+//}
+//
+//void update_LRU(char *url, char *body, record *rec_table, entry *lru, int *rec_tb_len, int time) {
+//    /**
+//     * Update LRU:
+//     * 1. If the given URL appear in the cache, then just update the time to the given time
+//     * 2. Otherwise, if the URL appeared in records, update the time to the given time and then
+//     *    exchange this record with the cache which is the oldest
+//     * 3. If this is the first time this URL appears, first append it to the end of the records,
+//     *    then exchange it with the oldest cache
+//     */
+//    int min_entry = 0;
+//    for (int i = 0; i < 3; i++) {
+//        if (lru[i].time == 0) {
+//            lru[i].url = url;
+//            lru[i].time = time;
+//            lru[i].freq = 1;
+//            lru[i].body = body;
+//            return;
+//        } else {
+//            if (strcmp(lru[i].url, url) == 0) {
+//                lru[i].time = time;
+//                lru[i].freq ++;
+//                return;
+//            }
+//            if (lru[i].time < lru[min_entry].time) {
+//                min_entry = i;
+//            }
+//        }
+//    }
+//    for (int i = 0; i < *rec_tb_len; i++) {
+//        if (strcmp(rec_table[i].url, url) == 0) {
+//            rec_table[i].time = time;
+//            // rec_table[i].freq ++;
+//            if (rec_table[i].time >= lru[min_entry].time) {
+//                int tmp1 = rec_table[i].freq;
+//                int tmp2 = rec_table[i].time;
+//                rec_table[i].url =  lru[min_entry].url;
+//                rec_table[i].freq = lru[min_entry].freq;
+//                rec_table[i].time = lru[min_entry].time;
+//                lru[min_entry].url = url;
+//                lru[min_entry].freq = tmp1;
+//                lru[min_entry].time = tmp2;
+//                lru[min_entry].body = body;
+//            }
+//            return;
+//        }
+//    }
+//    rec_table[*rec_tb_len].url = url;
+//    rec_table[*rec_tb_len].freq = 1;
+//    rec_table[*rec_tb_len].time = time;
+//    if (rec_table[*rec_tb_len].time >= lru[min_entry].time) {
+//        int tmp1 = rec_table[*rec_tb_len].freq;
+//        int tmp2 = rec_table[*rec_tb_len].time;
+//        rec_table[*rec_tb_len].url =  lru[min_entry].url;
+//        rec_table[*rec_tb_len].freq = lru[min_entry].freq;
+//        rec_table[*rec_tb_len].time = lru[min_entry].time;
+//        lru[min_entry].url = url;
+//        lru[min_entry].freq = tmp1;
+//        lru[min_entry].time = tmp2;
+//        lru[min_entry].body = body;
+//    }
+//    *rec_tb_len = *rec_tb_len + 1;
+//}
 
-void update_LFU(char *url, char *body, record *rec_table, entry *lfu, int *rec_tb_len, int time){
-    /**
-     * Update LFU:
-     * 1. If the given URL appear in the cache, then just update the frequency adding 1
-     * 2. Otherwise, if the URL appeared in records, increase its frequency by 1 and then check
-     *    whether it is frequent enough to be in the cache. If so, update cache.
-     * 3. If this is the first time this URL appears, add the URL to the record table with
-     *    frequency 1.
-     */
-    int min_entry = 0;
-    for (int i =0; i< 3; i++){
-        if (lfu[i].freq == 0){
-            lfu[i].url = url;
-            lfu[i].freq = 1;
-            lfu[i].time = time;
-            lfu[i].body = body;
-            return;
-        }
-        else {
-            if (strcmp(lfu[i].url, url) == 0) {
-                lfu[i].freq ++;
-                return;
-            }
-            if (lfu[i].freq < lfu[min_entry].freq){
-                min_entry = i;
-            }
-        }
-    }
-    for (int i = 0; i < *rec_tb_len; i++){
+void update_LFRU(char *url, char *body, record *rec_table, entry *lfu, entry *lru, int *rec_tb_len, int time) {
+    int i, j, min_freq = 0, min_time = 0, LRU_hit = 0, LFU_hit = 0;
+    for (i = 0; i < *rec_tb_len; i++){
         if (strcmp(rec_table[i].url, url) == 0) {
             rec_table[i].freq++;
-            if (rec_table[i].freq >= lfu[min_entry].freq) {
-                int tmp1 = rec_table[i].freq;
-                int tmp2 = rec_table[i].time;
-                rec_table[i].url = lfu[min_entry].url;
-                rec_table[i].freq = lfu[min_entry].freq;
-                rec_table[i].time = lfu[min_entry].time;
-                lfu[min_entry].url = url;
-                lfu[min_entry].freq = tmp1;
-                lfu[min_entry].time = tmp2;
-                lfu[min_entry].body = body;
-            }
-            return;
+            rec_table[i].time = time;
+            break;
         }
     }
-    rec_table[*rec_tb_len].url = url;
-    rec_table[*rec_tb_len].freq = 1;
-    rec_table[*rec_tb_len].time = time;
-    *rec_tb_len = *rec_tb_len + 1;
+    if (i == *rec_tb_len){
+        rec_table[i].url = url;
+        rec_table[i].freq = 1;
+        rec_table[i].time = time;
+        *rec_tb_len = *rec_tb_len + 1;
+    }
+    // Search LFU cache
+    for (j = 0; j < 3; j++){
+        if (lfu[j].freq == 0 || strcmp(lfu[j].url, url) == 0) {
+            lfu[j].time = rec_table[i].time;
+            lfu[j].freq = rec_table[i].freq;
+            lfu[j].url = rec_table[i].url;
+            lfu[j].body = body;
+            LFU_hit = 1;
+            break;
+        }
+        if (lfu[j].freq < lfu[min_freq].freq){
+            min_freq = j;
+        }
+    }
+    // Search LRU cache
+    for (j = 0; j < 1000; j++){
+        if (lru[j].freq == 0 || strcmp(lru[j].url, url) == 0) {
+            lru[j].time = rec_table[i].time;
+            lru[j].freq = rec_table[i].freq;
+            lru[j].url = rec_table[i].url;
+            lru[j].body = body;
+            LRU_hit = 1;
+            break;
+        }
+        if (lru[j].time < lru[min_time].time){
+            min_time = j;
+        }
+    }
+    // Update LFU cache
+    if (lfu[min_freq].freq <= rec_table[i].freq && LFU_hit == 0){
+        lfu[min_freq].url = rec_table[i].url;
+        lfu[min_freq].freq = rec_table[i].freq;
+        lfu[min_freq].time = rec_table[i].time;
+        lfu[min_freq].body = body;
+        return; // No need to update LRU cache since the object is now in LFU
+    }
+    // Update LRU cache
+    if (lru[min_time].time <= rec_table[i].time && LRU_hit == 0){
+        lru[min_time].url = rec_table[i].url;
+        lru[min_time].freq = rec_table[i].freq;
+        lru[min_time].time = rec_table[i].time;
+        lru[min_time].body = body;
+    }
 }
 
-void update_LRU(char *url, char *body, record *rec_table, entry *lru, int *rec_tb_len, int time) {
-    /**
-     * Update LRU:
-     * 1. If the given URL appear in the cache, then just update the time to the given time
-     * 2. Otherwise, if the URL appeared in records, update the time to the given time and then
-     *    exchange this record with the cache which is the oldest
-     * 3. If this is the first time this URL appears, first append it to the end of the records,
-     *    then exchange it with the oldest cache
-     */
-    int min_entry = 0;
-    for (int i = 0; i < 3; i++) {
-        if (lru[i].time == 0) {
-            lru[i].url = url;
-            lru[i].time = time;
-            lru[i].freq = 1;
-            lru[i].body = body;
-            return;
-        } else {
-            if (strcmp(lru[i].url, url) == 0) {
-                lru[i].time = time;
-                lru[i].freq ++;
-                return;
-            }
-            if (lru[i].time < lru[min_entry].time) {
-                min_entry = i;
-            }
-        }
+
+
+void disp(record *rec_table, entry *lfu, entry *lru, int rec_tb_len){
+    printf("\n -------------------------------------------------------------- \n");
+    for(int i = 0; i < 3; i++){
+        if (lfu[i].freq == 0)
+            break;
+        printf("[lfu] i = %d, entry = [url: %s, body = %s, freq: %d, time = %d]\n", i, lfu[i].url, lfu[i].body, lfu[i].freq, lfu[i].time);
     }
-    for (int i = 0; i < *rec_tb_len; i++) {
-        if (strcmp(rec_table[i].url, url) == 0) {
-            rec_table[i].time = time;
-            // rec_table[i].freq ++;
-            if (rec_table[i].time >= lru[min_entry].time) {
-                int tmp1 = rec_table[i].freq;
-                int tmp2 = rec_table[i].time;
-                rec_table[i].url =  lru[min_entry].url;
-                rec_table[i].freq = lru[min_entry].freq;
-                rec_table[i].time = lru[min_entry].time;
-                lru[min_entry].url = url;
-                lru[min_entry].freq = tmp1;
-                lru[min_entry].time = tmp2;
-                lru[min_entry].body = body;
-            }
-            return;
-        }
+    for(int i = 0; i < 1000; i++){
+        if (lru[i].freq == 0)
+            break;
+        printf("[lru] i = %d, entry = [url: %s, body = %s, freq: %d, time = %d]\n", i, lru[i].url, lru[i].body, lru[i].freq, lru[i].time);
     }
-    rec_table[*rec_tb_len].url = url;
-    rec_table[*rec_tb_len].freq = 1;
-    rec_table[*rec_tb_len].time = time;
-    if (rec_table[*rec_tb_len].time >= lru[min_entry].time) {
-        int tmp1 = rec_table[*rec_tb_len].freq;
-        int tmp2 = rec_table[*rec_tb_len].time;
-        rec_table[*rec_tb_len].url =  lru[min_entry].url;
-        rec_table[*rec_tb_len].freq = lru[min_entry].freq;
-        rec_table[*rec_tb_len].time = lru[min_entry].time;
-        lru[min_entry].url = url;
-        lru[min_entry].freq = tmp1;
-        lru[min_entry].time = tmp2;
-        lru[min_entry].body = body;
+    for(int i = 0; i < rec_tb_len; i++){
+        printf("[rec] i = %d, entry = [url: %s, freq: %d, time = %d]\n", i, rec_table[i].url, rec_table[i].freq, rec_table[i].time);
     }
-    *rec_tb_len = *rec_tb_len + 1;
+    printf("\n");
 }
 
 char* get_LFU(char *url, entry *lfu) {
