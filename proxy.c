@@ -25,7 +25,6 @@ struct thread_info {    /* Used as argument to update() */
 
 
 void *update(void *arg) {
-    // printf("===\n");
     struct thread_info *tinfo = arg;
     printf("args client_fd: %d\n", tinfo->client_fd);
     int client_fd = tinfo->client_fd;
@@ -47,21 +46,16 @@ void *update(void *arg) {
 
     /* Read request line and headers */
     Rio_readinitb(&rio, client_fd);
-    //   printf("===client request header===\n");
     Rio_readlineb(&rio, buf, MAXLINE);
-    //   printf("%s", buf);
 
-    // buf contains: [method, uri, version].
     uri = malloc(MAXLINE * sizeof(char));
     sscanf(buf, "%s %s %s", method, uri,
-           version);  // line:netp:doit:parserequest
+           version);
     printf("method: %s, uri: %s, version: %s\n", method, uri, version);
 
-    while (strcmp(buf, "\r\n")) {  // line:netp:readhdrs:checkterm
+    while (strcmp(buf, "\r\n")) {
         Rio_readlineb(&rio, buf, MAXLINE);
-        // printf("%s", buf);
     }
-    //   printf("===\n");
 
     /**
      * Hit Cache.
@@ -80,8 +74,6 @@ void *update(void *arg) {
         printf("return response: %s\n", lfu_cache_res);
         printf("--------------------------------\n");
         Close(client_fd);
-        // continue;
-        // break;
     }
     if (lru_cache_res != NULL) {
         pthread_mutex_lock(&lock);
@@ -93,22 +85,11 @@ void *update(void *arg) {
         printf("return response: %s\n", lru_cache_res);
         printf("--------------------------------\n");
         Close(client_fd);
-        // continue;
-        // break;
     }
 
 
-    printf("===hit cache fail!===\n");
-    //     printf("----------position 1-------------\n");
-
-    //   for(int i = 0; i < 3; i++) {
-    //       printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
-    //   }
-    //     printf("--------------------------------\n");
-
-
     /**
-     * 3. eatablish connection with server.
+     * 3. establish connection with server.
      * - assume we have ip: localhost; port: 3010.
      */
     struct sockaddr_in server;
@@ -134,7 +115,6 @@ void *update(void *arg) {
     // [TODO]: Finally, if a browser sends any additional request headers as
     // part of an HTTP request, your proxy should forward them unchanged.
 
-    // char* new_buff = "GET /home2.html HTTP/1.1\r\n\r\n";
     printf("[5] new buf content:\n %s", new_buff);
 
     Rio_writen(server_fd, new_buff, MAXLINE);
@@ -159,24 +139,7 @@ void *update(void *arg) {
         pthread_mutex_lock(&lock);
         update_LFRU(uri, s_buf, rec_table, lfu, lru, &rec_tb_len, now);
         pthread_mutex_unlock(&lock);
-        printf("\n\n*************************");
 
-        printf("[LFU cache] update cache success!\n");
-        printf("----------update cache with server response-------------\n");
-        for (int i = 0; i < 3; i++) {
-            printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
-        }
-        printf("--------------------------------------------------------\n");
-
-        printf("[LRU cache] update cache success!\n");
-        printf("----------update cache with server response-------------\n");
-        for (int i = 0; i < 3; i++) {
-            printf("[lru entry]: url: %s, body: %s, fre: %d, time: %d.\n", lru[i].url, lru[i].body, lru[i].freq,
-                   lru[i].time);
-        }
-        printf("--------------------------------------------------------\n");
-
-        printf("\n\n");
     }
 
 
