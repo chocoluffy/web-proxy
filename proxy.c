@@ -102,6 +102,7 @@ void *update(void *arg) {
     printf("[3] parse url: hostname: %s, port: %s.\n", hostname, port);
 
     int server_fd = Open_clientfd(hostname, port);
+    printf("### ==== should not be called.==== ###\n");
 
     /**
      * 5. forward client's request to server.
@@ -126,17 +127,21 @@ void *update(void *arg) {
 
     char *s_buf;
     s_buf = malloc(MAXBUF * sizeof(char));
+    int total_size = 0;
     while (Rio_readnb(&s_rio, s_buf, MAXLINE) > 0) {
         printf("==s_buf:==\n");
         printf("%s", s_buf);
         Rio_writen(client_fd, s_buf, MAXBUF);
+        total_size += strlen(s_buf);
         // [TODO]: accumualte s_buf in case response body > 1 * MAXLINE. 
     }
     printf("===\n");
 
     // Save Server Response into cache.
-    printf("[cache] current_read: %d, max: %d\n", (int) sizeof(s_buf), MAX_OBJECT_SIZE);
-    if (sizeof(s_buf) < MAX_OBJECT_SIZE) {
+    // printf("[cache] current_read: %d, max: %d\n", (int) sizeof(s_buf), MAX_OBJECT_SIZE);
+
+    printf("@@@@ current object total size: %d.\n", total_size);
+    if (total_size < MAX_OBJECT_SIZE) {
         int now = (int) time(NULL);
         pthread_mutex_lock(&lock);
         update_LFRU(uri, s_buf, rec_table, lfu, lru, &rec_tb_len, now);
