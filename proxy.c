@@ -22,100 +22,17 @@ struct thread_info {    /* Used as argument to update() */
   int client_fd; 
 };
 
-int main(int argc, char **argv) {
-  printf("%s", user_agent_hdr);
-  int proxy_fd;
-  int client_fd;  // use for accept\send to client.
-  int server_fd;  // use for connect\send to the server.
-  char hostname[MAXLINE], port[MAXLINE];
-  socklen_t client_len, server_len;
-  struct sockaddr_storage client_addr, server_addr;
 
-  entry lfu[3];
-  entry lru[1000];
-  // Initalize the lfu array.
-  for (int i = 0; i < 3; i++) {
-    lfu[i].url = NULL;
-    lfu[i].freq = 0;
-    lfu[i].body = NULL;
-    lfu[i].time = 0;
-  }
-  
-  for(int i = 0; i < 1000; i++) {
-    lru[i].url = NULL;
-    lru[i].freq = 0;
-    lru[i].body = NULL;
-    lru[i].time = 0;
-  }
+void *update(void *arg) {
 
-  record rec_table[1000];
-  int rec_tb_len = 0;
-
-  /*
-   * 1. establish connection with client: bind argv[1] to proxy_fd.
-   * 2. parse client request header. get server addr & port.
-   * 3. eatablish connection with server.
-   * 4. ... (TODO: check and update header.)
-   * 5. forward client's request to server.
-   * 6. wait for response from server.
-   * 7. forward response to client.
-   */
-
-  /* Check command line args */
-  if (argc != 2) {
-    fprintf(stderr, "usage: %s <port>\n", argv[0]);
-    exit(1);
-  }
-
-  proxy_fd = Open_listenfd(argv[1]);
-
-  while (1) {
-
-      printf("\n\n\n");
-      printf("\n\n\n");
-
-      //   printf("----------position 0-------------\n");
-
-      // for(int i = 0; i < 3; i++) {
-      //     printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
-      // }
-      //   printf("--------------------------------\n");
-
-
-    // 1. establish connection with client: bind argv[1] to proxy_fd.
-    client_len = sizeof(client_addr);
-
-    client_fd = Accept(proxy_fd, (SA *)&client_addr,
-                       &client_len);  // line:netp:tiny:accept
-    Getnameinfo((SA *)&client_addr, client_len, hostname, MAXLINE, port,
-                MAXLINE, 0);
-    printf("[start]: Accepted connection from (%s, %s)\n", hostname, port);
-
-    // printf("----------LFU cache. after connection-------------\n");
-
-    // for(int i = 0; i < 3; i++) {
-    //     printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
-    // }
-    // printf("--------------------------------\n");
-
-    // Each client connection takes one thread.
-    // int pid = Fork();
-    // if (pid < 0) {
-    //   Close(client_fd);
-    //   break;
-    // }
-    // if (pid == 0) {
-
-
-    // Use pthread, to create a new thread each time having a new connection with client.
-    // struct thread_info *tinfo = calloc(1, sizeof(struct thread_info));
-    // pthread_t *tid = malloc( 1 * sizeof(pthread_t) );
-
-    // tinfo->lfu = lfu;
-    // tinfo->lru = lru;
-    // tinfo->rec_table = rec_table;
-    // tinfo->rec_tb_len = rec_tb_len;
-    // tinfo->client_fd = client_fd;
+      // printf("===\n");
+      struct thread_info *tinfo = arg;
+      printf("args client_fd: %d\n", tinfo->client_fd);
+      int client_fd = tinfo->client_fd;
+      entry* lfu = tinfo->lfu;
+      entry* lru = tinfo->lru;
+      record* rec_table = tinfo->rec_table;
+      int rec_tb_len = tinfo->rec_tb_len;
 
       /**
        * 2. parse client request header. get server addr & port.
@@ -123,7 +40,11 @@ int main(int argc, char **argv) {
       char buf[MAXLINE], method[MAXLINE], version[MAXLINE];
       char *uri;
       rio_t rio;
+      printf("===\n");
 
+      printf("client_fd: %d\n", client_fd);
+
+      
       /* Read request line and headers */
       Rio_readinitb(&rio, client_fd);
     //   printf("===client request header===\n");
@@ -257,6 +178,129 @@ int main(int argc, char **argv) {
 
       Close(client_fd);
       Close(server_fd);
+}
+
+
+int main(int argc, char **argv) {
+  printf("%s", user_agent_hdr);
+  int proxy_fd;
+  int client_fd;  // use for accept\send to client.
+  int server_fd;  // use for connect\send to the server.
+  char hostname[MAXLINE], port[MAXLINE];
+  socklen_t client_len, server_len;
+  struct sockaddr_storage client_addr, server_addr;
+
+  entry lfu[3];
+  entry lru[1000];
+  // Initalize the lfu array.
+  for (int i = 0; i < 3; i++) {
+    lfu[i].url = NULL;
+    lfu[i].freq = 0;
+    lfu[i].body = NULL;
+    lfu[i].time = 0;
+  }
+  
+  for(int i = 0; i < 1000; i++) {
+    lru[i].url = NULL;
+    lru[i].freq = 0;
+    lru[i].body = NULL;
+    lru[i].time = 0;
+  }
+
+  record rec_table[1000];
+  int rec_tb_len = 0;
+
+  /*
+   * 1. establish connection with client: bind argv[1] to proxy_fd.
+   * 2. parse client request header. get server addr & port.
+   * 3. eatablish connection with server.
+   * 4. ... (TODO: check and update header.)
+   * 5. forward client's request to server.
+   * 6. wait for response from server.
+   * 7. forward response to client.
+   */
+
+  /* Check command line args */
+  if (argc != 2) {
+    fprintf(stderr, "usage: %s <port>\n", argv[0]);
+    exit(1);
+  }
+
+  proxy_fd = Open_listenfd(argv[1]);
+  
+
+  while (1) {
+
+      printf("\n\n\n");
+      printf("\n\n\n");
+
+      //   printf("----------position 0-------------\n");
+
+      // for(int i = 0; i < 3; i++) {
+      //     printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+      // }
+      //   printf("--------------------------------\n");
+
+
+    // 1. establish connection with client: bind argv[1] to proxy_fd.
+    client_len = sizeof(client_addr);
+
+    client_fd = Accept(proxy_fd, (SA *)&client_addr,
+                       &client_len);  // line:netp:tiny:accept
+    Getnameinfo((SA *)&client_addr, client_len, hostname, MAXLINE, port,
+                MAXLINE, 0);
+    printf("[start]: Accepted connection from (%s, %s)\n", hostname, port);
+
+    // printf("----------LFU cache. after connection-------------\n");
+
+    // for(int i = 0; i < 3; i++) {
+    //     printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+    // }
+    // printf("--------------------------------\n");
+
+    // Each client connection takes one thread.
+    // int pid = Fork();
+    // if (pid < 0) {
+    //   Close(client_fd);
+    //   break;
+    // }
+    // if (pid == 0) {
+
+
+    // Use pthread, to create a new thread each time having a new connection with client.
+    struct thread_info *tinfo = calloc(1, sizeof(struct thread_info));
+    pthread_t tid = malloc( 1 * sizeof(pthread_t) );
+
+    tinfo->lfu = lfu;
+    tinfo->lru = lru;
+    tinfo->rec_table = rec_table;
+    tinfo->rec_tb_len = rec_tb_len;
+    tinfo->client_fd = client_fd;
+
+    // printf("args client_fd: %d\n", tinfo->client_fd);
+
+    pthread_create(&tid, NULL, &update, tinfo);
+    
+    pthread_join(tid, NULL);
+
+
+              printf("\n\n*************************");
+
+          printf("[LFU cache] update cache success!\n");
+          printf("----------update cache with server response-------------\n");
+          for(int i = 0; i < 3; i++) {
+              printf("[lfu entry]: url: %s, body: %s, fre: %d.\n", lfu[i].url, lfu[i].body, lfu[i].freq);
+          }
+          printf("--------------------------------------------------------\n");
+
+          printf("[LRU cache] update cache success!\n");
+          printf("----------update cache with server response-------------\n");
+          for(int i = 0; i < 3; i++) {
+              printf("[lru entry]: url: %s, body: %s, fre: %d, time: %d.\n", lru[i].url, lru[i].body, lru[i].freq, lru[i].time);
+          }
+          printf("--------------------------------------------------------\n");
+
+          printf("\n\n");
 
       // break;
     }
