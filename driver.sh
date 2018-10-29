@@ -23,7 +23,7 @@ PORT_MAX=65000
 MAX_PORT_TRIES=10
 
 # List of text and binary files for the basic test
-BASIC_LIST="home.html
+BASIC_LIST="home2.html
             csapp.c
             tiny.c
             godzilla.jpg
