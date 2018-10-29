@@ -13,7 +13,9 @@ typedef struct Record{
 } record;
 
 
-
+/**
+ * Parse client url to obtain ip address and port information.
+ */
 void get_host_ip_and_port(char *url, char *addr, char* port){
     int flag = 0, addr_start = -1, i;
     int port_start = -1, port_end = -1;
@@ -54,6 +56,10 @@ void get_host_ip_and_port(char *url, char *addr, char* port){
     port[port_end - port_start] = '\0';
 }
 
+
+/**
+ * Parse url to get filename.
+ */
 void get_filename(char *url, char *filename){
     char *s = url;
     s = strstr(url, "http");
@@ -67,6 +73,9 @@ void get_filename(char *url, char *filename){
     strcpy(filename, s);
 }
 
+/**
+ * Update LFU and LRU. 
+ */
 void update_LFRU(char *url, char *body, record *rec_table, entry *lfu, entry *lru, int *rec_tb_len, int time) {
     int i, j, min_freq = 0, min_time = 0, LRU_hit = 0, LFU_hit = 0;
     for (i = 0; i < *rec_tb_len; i++){
@@ -128,7 +137,9 @@ void update_LFRU(char *url, char *body, record *rec_table, entry *lfu, entry *lr
 }
 
 
-
+/**
+ * Print LFU and LRU for debugging purpose.
+ */
 void disp(record *rec_table, entry *lfu, entry *lru, int rec_tb_len){
     printf("\n -------------------------------------------------------------- \n");
     for(int i = 0; i < 3; i++){
@@ -147,6 +158,9 @@ void disp(record *rec_table, entry *lfu, entry *lru, int rec_tb_len){
     printf("\n");
 }
 
+/**
+ * Check if entry exists in LFU.
+ */
 char* get_LFU(char *url, entry *lfu) {
     /**
      * return NULL: content from this url is not cached in lfu table.
@@ -163,6 +177,10 @@ char* get_LFU(char *url, entry *lfu) {
     return NULL;
 }
 
+
+/**
+ * Check if entry exists in LRU.
+ */
 char* get_LRU(char *url, entry *lru) {
     /**
      * return NULL: content from this url is not cached in lfu table.
@@ -177,11 +195,3 @@ char* get_LRU(char *url, entry *lru) {
     }
     return NULL;
 }
-
-//int main(){
-//    lfu_entry lfu[3];
-//    record rec_table[1000];
-//    int rec_tb_len = 0;
-//    update_LFU("a.com", "aaaaa", rec_table, lfu, &rec_tb_len);
-//    return 0;
-//}
