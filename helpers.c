@@ -169,8 +169,6 @@ char* get_LFU(char *url, entry *lfu) {
     for (int i = 0; i < 3; i++) {
         if (lfu[i].freq == 0) return NULL; // lfu_table has not been initialized.
         if (strcmp(url, lfu[i].url) == 0) {
-            printf("[get_LFU]: cache key: %s, my key: %s\n", lfu[i].url, url);
-            printf("[get_LFU]: cache key: %s, body: %s\n", lfu[i].url, lfu[i].body);
             return lfu[i].body;
         }
     }
@@ -188,9 +186,7 @@ char* get_LRU(char *url, entry *lru) {
     for (int i = 0; i < 1000; i++) {
         if (lru[i].freq == 0) return NULL; // lfu_table has not been initialized.
         if (strcmp(url, lru[i].url) == 0) {
-            printf("[get_LRU]: cache key: %s, my key: %s\n", lru[i].url, url);
             return lru[i].body;
-            // printf("[get_LFU]: res: %s\n", res);
         }
     }
     return NULL;
